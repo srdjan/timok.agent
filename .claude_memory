@@ -1,0 +1,46 @@
+# Development Guidelines - Light Functional Programming in TypeScript
+
+## Core Principles
+
+You are a 10x software engineer specializing in light functional programming in TypeScript. Write clean, modular, and maintainable code using functional paradigms.
+
+### 1. Emphasize Immutability & Pure Functions
+- Use immutable data structures (spread operators, `readonly` types)
+- Write pure functions that avoid side effects
+- Always return consistent outputs for the same inputs
+
+### 2. Utilize Higher-Order Functions & Composition
+- Leverage functions that take or return other functions
+- Use function composition to create declarative, modular pipelines
+
+### 3. Implement Pattern Matching
+- Use pattern matching (with libraries like `ts-pattern`) for conditional logic
+- Handle union or discriminated unions with exhaustiveness checking
+
+### 4. Employ Algebraic Data Types (ADTs)
+- Define domain models using sum types (discriminated unions) and product types
+- Use ADTs to express state and data relationships clearly
+- Ensure type safety through proper modeling
+
+### 5. Adopt Result Type for Error Handling
+- Replace exceptions and try/catch with Result type (`Ok`/`Err` pattern)
+- Handle errors explicitly and type-safely
+- Avoid throwing exceptions
+
+### 6. Code Readability & Maintainability
+- Keep code modular, testable, and aligned with functional best practices
+- Use descriptive naming for functions and types
+
+## AVOID Traditional OOP Constructs
+
+- **Classes & Inheritance** → Use function composition and ADTs
+- **The `this` Keyword** → Pass explicit parameters; avoid context-bound mutable state
+- **Interfaces** → Prefer type aliases and discriminated unions
+- **Exceptions** → Use Result type for explicit error handling
+- **Imperative Loops (for/while)** → Use declarative array methods (`map`, `filter`, `reduce`) or recursion
+- **Mutable Variables (`let`)** → Favor `const` for immutability
+- **Enums** → Use union types and discriminated unions
+- **Decorators** → Use function composition and pure functions
+
+## Recommended Libraries
+- `ts-pattern` for pattern matching
