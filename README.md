@@ -1,12 +1,29 @@
 # User Agent 402 - Deno Edition
 
-A **minimal framework for pay-as-you-go monetized agent-first APIs** built with functional programming principles in TypeScript and Deno. This is a complete port of the original [user-agent-402](https://github.com/janwilmake/user-agent-402) from CloudFlare Workers to Deno with Deno KV.
+A **minimal framework for pay-as-you-go monetized agent-first APIs** built with functional programming principles in TypeScript and Deno. This is a complete port of the original [user-agent-402](https://github.com/janwilmake/user-agent-402) from CloudFlare Workers to Deno with Deno KV and Polar instead of Stripe.
+
+## Migration Benefits
+
+### Strip -> Polar
+
+- **Lower Fees**: Polar offers 20% lower fees than traditional payment processors
+- **Developer-Friendly**: Built specifically for developers with better APIs
+- **Open Source**: Transparent, community-driven development
+- **Modern Architecture**: Better suited for modern web applications
+
+### CloudFlare Functions -> Deno
+
+- **Broader Hosting Options**: Deno has a hosting ecosystem that includes Deno Deploy, Vercel, and more
+- **Modern Runtime**: Deno is a secure, performant, and modern runtime
+- **Local Development**: Easy to run and test locally
+- **File System Access**: No need for CloudFlare Workers' limited file system
+- **Community & Ecosystem**: Strong TypeScript and Deno community support
 
 ## 🎯 **What is User Agent 402?**
 
 User Agent 402 provides a ready-to-use framework for building **monetized APIs** that charge users per request. It handles the complex infrastructure around:
 
-- **Authentication & Billing**: Stripe integration for user payments
+- **Authentication & Billing**: Polar integration for user payments
 - **Rate Limiting**: Free tier with configurable limits
 - **Response Caching**: Versioned caching with Deno KV
 - **Format Negotiation**: Automatic JSON/HTML/Markdown responses
@@ -17,8 +34,9 @@ Perfect for building **AI agents, data APIs, or any service** where you want to 
 ## 🚀 **Quick Start**
 
 ### Prerequisites
+
 - [Deno](https://deno.land/) installed
-- Optional: Stripe account for payment processing
+- Optional: Polar account for payment processing
 
 ### Installation & Running
 
@@ -84,8 +102,8 @@ await initializeServer(myConfig);
 For payment processing (optional):
 
 ```bash
-export STRIPE_SECRET=sk_...
-export STRIPE_PAYMENT_LINK=https://buy.stripe.com/...
+export POLAR_ACCESS_TOKEN=polar_...
+export POLAR_PAYMENT_LINK=https://polar.sh/checkout/...
 ```
 
 ## 📊 **How It Works**
@@ -137,10 +155,10 @@ type Result<T, E = Error> =
   | { readonly kind: 'err'; readonly error: E };
 
 // User state as algebraic data type
-type UserState = 
+type UserState =
   | { readonly kind: 'anonymous'; readonly clientId: string }
-  | { readonly kind: 'authenticated'; readonly user: StripeUser }
-  | { readonly kind: 'insufficient_balance'; readonly user: StripeUser };
+  | { readonly kind: 'authenticated'; readonly user: PolarUser }
+  | { readonly kind: 'insufficient_balance'; readonly user: PolarUser };
 ```
 
 ### Functional Benefits
@@ -165,17 +183,19 @@ timok.agent/
 ## 🎨 **Features**
 
 ### ✅ **Implemented**
+
 - ✅ Rate limiting with Deno KV
 - ✅ Response caching with versioning
 - ✅ Multiple response formats (JSON/HTML/Markdown)
 - ✅ CORS support
-- ✅ Stripe integration (optional)
+- ✅ Polar integration (optional)
 - ✅ Bearer token authentication
 - ✅ Functional programming architecture
 - ✅ Type-safe error handling
 
 ### 🚧 **Potential Enhancements**
-- Webhook handling for Stripe events
+
+- Webhook handling for Polar events
 - Admin dashboard for user management
 - Analytics and usage tracking
 - Custom rate limit tiers
@@ -204,6 +224,7 @@ timok.agent/
 ### Example Responses
 
 **Success (200)**:
+
 ```json
 {
   "message": "Hello, world!",
@@ -212,11 +233,12 @@ timok.agent/
 ```
 
 **Payment Required (402)**:
+
 ```json
 {
   "error": "Payment Required",
   "message": "Free rate limit exceeded. Limit: 10 requests per 3600 seconds.",
-  "payment_link": "https://buy.stripe.com/...",
+  "payment_link": "https://polar.sh/checkout/...",
   "status": 402
 }
 ```
@@ -251,6 +273,7 @@ This project follows functional programming principles. When contributing:
 This Deno port differs from the original CloudFlare Workers version:
 
 ### What Changed
+
 - **Runtime**: CloudFlare Workers → Deno
 - **Storage**: CloudFlare KV → Deno KV
 - **Architecture**: Object-oriented → Functional programming
@@ -258,6 +281,7 @@ This Deno port differs from the original CloudFlare Workers version:
 - **Configuration**: TOML → TypeScript objects
 
 ### What Stayed the Same
+
 - Core functionality and API design
 - Rate limiting and billing logic
 - CORS and response format handling

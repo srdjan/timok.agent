@@ -8,7 +8,7 @@
     "@std/http": "jsr:@std/http@1",
     "@std/path": "jsr:@std/path@1",
     "@std/toml": "jsr:@std/toml@1",
-    "stripe": "https://esm.sh/stripe@17",
+    "@polar-sh/sdk": "npm:@polar-sh/sdk@^0.34.0",
     "ts-pattern": "https://esm.sh/ts-pattern@5"
   }
 }

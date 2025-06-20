@@ -19,7 +19,7 @@ This is a Deno/TypeScript port of the user-agent-402 library (originally built f
 
 ## Key Dependencies
 
-- `stripe` - Stripe payment processing (optional, loaded via esm.sh)
+- `@polar-sh/sdk` - Polar payment processing (optional, loaded via npm)
 - Deno KV - Built-in key-value store for caching and rate limiting
 
 ## Architecture Overview
@@ -65,12 +65,13 @@ const config = {
 
 ### Environment Variables
 
-- `STRIPE_SECRET` - Stripe secret key (optional)
-- `STRIPE_PAYMENT_LINK` - Payment link for upgrading users
+- `POLAR_ACCESS_TOKEN` - Polar access token (optional)
+- `POLAR_PAYMENT_LINK` - Payment link for upgrading users
 
 ## Testing
 
 The server runs on port 8000 by default. Test endpoints:
+
 - `GET /` - Basic JSON response
 - `GET /test.html` - HTML formatted response (when Accept: text/html)
 - Rate limiting triggers after 10 requests from same IP
@@ -78,7 +79,7 @@ The server runs on port 8000 by default. Test endpoints:
 ## Implementation Notes
 
 - Uses Deno's native HTTP server (`Deno.serve`)
-- Stripe integration is optional - server works without payment processing
+- Polar integration is optional - server works without payment processing
 - Rate limiting uses client IP as fallback identifier
 - Supports automatic markdown to HTML conversion
 - All responses include CORS headers for cross-origin access
