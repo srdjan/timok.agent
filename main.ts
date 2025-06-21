@@ -48,6 +48,7 @@ type Config = {
   readonly freeRatelimit: number;
   readonly freeRateLimitResetSeconds: number;
   readonly cacheSeconds?: number;
+  readonly getUserByToken?: (token: string, kv: Deno.Kv) => Promise<PolarUser | null>;
   readonly fetch: (request: Request, context: Context) => Promise<Response>;
 };
 
@@ -349,14 +350,17 @@ const createOptionsResponse = (): Response =>
 // === USER STATE DETERMINATION ===
 
 // Determine user state using pattern matching
-const determineUserState = (kv: Deno.Kv) =>
+const determineUserState = (kv: Deno.Kv, config: Config) =>
   async (requestData: RequestData): Promise<UserState> => {
     if (!requestData.authToken) {
       const clientId = 'anonymous'; // In real implementation, use IP or similar
       return { kind: 'anonymous', clientId };
     }
 
-    const userResult = await getUserByToken(kv)(requestData.authToken);
+    // Use custom getUserByToken if provided, otherwise default implementation
+    const userResult = config.getUserByToken 
+      ? await config.getUserByToken(requestData.authToken, kv).then(user => ({ kind: 'ok' as const, value: user })).catch(err => ({ kind: 'err' as const, error: err as Error }))
+      : await getUserByToken(kv)(requestData.authToken);
 
     if (isErr(userResult) || !userResult.value) {
       const clientId = requestData.authToken;
@@ -393,7 +397,7 @@ const handleRequest = (config: Config, kv: Deno.Kv, env: Record<string, string>)
     }
 
     // Determine user state
-    const userState = await determineUserState(kv)(requestData);
+    const userState = await determineUserState(kv, config)(requestData);
 
     // Check rate limits
     const rateLimitResult = await checkRateLimit(kv, config)(userState);
@@ -488,5 +492,5 @@ if (import.meta.main) {
 }
 
 // Export for use as a library
-export { initializeServer, defaultConfig };
+export { initializeServer, defaultConfig, handleRequest };
 export type { Config, Context, PolarUser, Result };
