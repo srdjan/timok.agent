@@ -44,6 +44,7 @@ interface UserSession {
 }
 
 // Image generation pricing configuration
+// TODO: credits can be traded to establish price, on embedded clob 
 const IMAGE_PRICING = {
   "256x256": 5,    // 5 credits for small images
   "512x512": 10,   // 10 credits for medium images
@@ -206,7 +207,44 @@ const demoConfig: Config = {
 
       // Original demo endpoints
       case '/':
-        return createDemoResponse('welcome', isHtml, isMarkdown, context);
+        // Serve the interactive demo HTML page for browsers, API response for other clients
+        if (isHtml || (!acceptHeader.includes('application/json') && !acceptHeader.includes('text/markdown'))) {
+          try {
+            const htmlContent = await Deno.readTextFile('./examples/index.html');
+            return new Response(htmlContent, {
+              status: 200,
+              headers: {
+                'Content-Type': 'text/html',
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+                'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+              }
+            });
+          } catch (error) {
+            console.error('Error serving index.html:', error);
+            // Fallback to JSON response if HTML file not found
+            return createDemoResponse('welcome', isHtml, isMarkdown, context);
+          }
+        } else {
+          // Return API response for explicit JSON/markdown requests with note about interactive demo
+          const response = createDemoResponse('welcome', isHtml, isMarkdown, context);
+          const originalResponse = await response.json();
+          const enhancedResponse = {
+            ...originalResponse,
+            interactive_demo: "Visit http://localhost:8000 in your browser for the full interactive demo",
+            demo_features: [
+              "User registration and authentication",
+              "API endpoint testing",
+              "Credit purchasing simulation",
+              "AI image generation",
+              "Rate limiting demonstration"
+            ]
+          };
+          return new Response(JSON.stringify(enhancedResponse, null, 2), {
+            status: response.status,
+            headers: response.headers
+          });
+        }
 
       case '/api/status':
         return createDemoResponse('status', isHtml, isMarkdown, context);
@@ -1208,8 +1246,8 @@ ${context.user ?
 // Start the demo server
 if (import.meta.main) {
   console.log("🚀 Starting User Agent 402 Demo Server...");
-  console.log("📱 Open demo.html in your browser to test the complete monetized API flow");
-  console.log("🌐 Server will be available at http://localhost:8000");
+  console.log("📱 Interactive demo available at http://localhost:8000");
+  console.log("🌐 The home page serves the complete monetized API flow demo");
   console.log("\n📋 Authentication endpoints:");
   console.log("  POST /api/auth/register     - Create new user account");
   console.log("  POST /api/auth/login        - User login");
@@ -1219,7 +1257,7 @@ if (import.meta.main) {
   console.log("  POST /api/payment/webhook         - Process payment webhooks");
   console.log("  GET  /api/payment/balance         - Get user credit balance");
   console.log("\n📋 API endpoints:");
-  console.log("  GET  /                      - Welcome message");
+  console.log("  GET  /                      - Interactive demo home page");
   console.log("  GET  /api/status            - Server status");
   console.log("  GET  /api/user              - User information");
   console.log("  GET  /api/data              - Sample data");
@@ -1255,6 +1293,29 @@ if (import.meta.main) {
           'Access-Control-Allow-Headers': 'Content-Type, Authorization',
         }
       });
+    }
+    
+    // Handle home page HTML serving directly (bypass framework to avoid rate limiting)
+    if (pathname === '/') {
+      const acceptHeader = request.headers.get('Accept') || '';
+      // Serve HTML for browsers, let framework handle JSON API requests
+      if (acceptHeader.includes('text/html') || (!acceptHeader.includes('application/json') && !acceptHeader.includes('text/markdown'))) {
+        try {
+          const htmlContent = await Deno.readTextFile('./examples/index.html');
+          return new Response(htmlContent, {
+            status: 200,
+            headers: {
+              'Content-Type': 'text/html',
+              'Access-Control-Allow-Origin': '*',
+              'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+              'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+            }
+          });
+        } catch (error) {
+          console.error('Error serving index.html:', error);
+          // Fall through to framework handler as fallback
+        }
+      }
     }
     
     // Bypass framework for auth and payment endpoints
