@@ -6,7 +6,7 @@ import {
   type Config,
   type PolarUser,
   type Result
-} from "./main.ts";
+} from "../main.ts";
 
 // === PURE FUNCTION TESTS ===
 

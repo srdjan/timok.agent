@@ -8,7 +8,7 @@
  * different response formats and payment scenarios.
  */
 
-import { initializeServer, type Config } from "./main.ts";
+import { initializeServer, type Config } from "../main.ts";
 
 // Demo configuration with custom handlers
 const demoConfig: Config = {

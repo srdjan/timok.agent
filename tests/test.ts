@@ -1,6 +1,6 @@
 #!/usr/bin/env deno run --allow-net --allow-read --allow-write --allow-env --unstable-kv
 
-import { initializeServer, defaultConfig } from "./main.ts";
+import { initializeServer, defaultConfig } from "../main.ts";
 
 // Create a custom config for testing
 const testConfig = {
