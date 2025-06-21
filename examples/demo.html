@@ -245,6 +245,97 @@
         color: #0c4a6e;
         font-size: 14px;
       }
+
+      .image-generation-section {
+        background: #fef7ff;
+        border: 1px solid #e879f9;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+      }
+
+      .image-generation-section h3 {
+        color: #a21caf;
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .cost-indicator {
+        background: #fef3c7;
+        border: 1px solid #fbbf24;
+        border-radius: 6px;
+        padding: 8px 12px;
+        font-size: 12px;
+        font-weight: 600;
+        color: #92400e;
+        margin-bottom: 10px;
+      }
+
+      .image-preview {
+        background: #f8fafc;
+        border: 2px dashed #cbd5e1;
+        border-radius: 8px;
+        padding: 20px;
+        text-align: center;
+        margin-top: 15px;
+        min-height: 200px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+      }
+
+      .image-preview img {
+        max-width: 100%;
+        max-height: 300px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      }
+
+      .image-preview .placeholder {
+        color: #64748b;
+        font-style: italic;
+      }
+
+      .generating {
+        color: #3b82f6;
+        font-weight: 600;
+      }
+
+      .generating::after {
+        content: "...";
+        animation: dots 1.5s infinite;
+      }
+
+      @keyframes dots {
+        0%, 20% {
+          content: "";
+        }
+        40% {
+          content: ".";
+        }
+        60% {
+          content: "..";
+        }
+        80%, 100% {
+          content: "...";
+        }
+      }
+
+      .image-controls {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+        margin-bottom: 15px;
+      }
+
+      @media (max-width: 768px) {
+        .image-controls {
+          grid-template-columns: 1fr;
+        }
+      }
     </style>
   </head>
   <body>
@@ -292,6 +383,9 @@
               <option value="http://localhost:8000/api/premium">
                 Premium Content
               </option>
+              <option value="http://localhost:8000/api/generate-image">
+                Image Generation Info
+              </option>
             </select>
           </div>
 
@@ -330,6 +424,62 @@
           </div>
 
           <button class="btn" id="makeRequest">Make API Request</button>
+
+          <!-- Image Generation Section -->
+          <div class="image-generation-section">
+            <h3>🎨 AI Image Generation</h3>
+            <p style="margin-bottom: 15px; color: #6b7280; font-size: 14px">
+              Generate high-quality images using OpenAI's DALL-E model
+            </p>
+
+            <div class="cost-indicator" id="imageCostIndicator">
+              💰 Cost: 25 credits for 1024x1024 images
+            </div>
+
+            <div class="form-group">
+              <label for="imagePrompt">Image Prompt</label>
+              <textarea
+                id="imagePrompt"
+                rows="3"
+                placeholder="Describe the image you want to generate (e.g., 'A serene mountain landscape at sunset with a lake reflection')"
+              ></textarea>
+            </div>
+
+            <div class="image-controls">
+              <div class="form-group">
+                <label for="imageSize">Image Size</label>
+                <select id="imageSize">
+                  <option value="256x256">256x256 (5 credits)</option>
+                  <option value="512x512">512x512 (10 credits)</option>
+                  <option value="1024x1024" selected>
+                    1024x1024 (25 credits)
+                  </option>
+                  <option value="1792x1024">
+                    1792x1024 Landscape (35 credits)
+                  </option>
+                  <option value="1024x1792">
+                    1024x1792 Portrait (35 credits)
+                  </option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="imageQuality">Quality</label>
+                <select id="imageQuality">
+                  <option value="standard" selected>Standard</option>
+                  <option value="hd">HD (Higher cost)</option>
+                </select>
+              </div>
+            </div>
+
+            <button class="btn" id="generateImage">🎨 Generate Image</button>
+
+            <div class="image-preview" id="imagePreview">
+              <div class="placeholder">
+                Generated images will appear here
+              </div>
+            </div>
+          </div>
         </div>
 
         <div class="response-area">
@@ -349,6 +499,17 @@
       // Demo state management
       let requestCount = 0;
       const maxFreeRequests = 10;
+      let imageGenerationCount = 0;
+      const maxFreeImages = 2;
+
+      // Image pricing configuration
+      const imagePricing = {
+        "256x256": 5,
+        "512x512": 10,
+        "1024x1024": 25,
+        "1792x1024": 35,
+        "1024x1792": 35,
+      };
 
       // DOM elements
       const endpointSelect = document.getElementById("endpoint");
@@ -371,12 +532,29 @@
       const requestCountSpan = document.getElementById("requestCount");
       const rateLimitFill = document.getElementById("rateLimitFill");
 
+      // Image generation elements
+      const imagePromptInput = document.getElementById("imagePrompt");
+      const imageSizeSelect = document.getElementById("imageSize");
+      const imageQualitySelect = document.getElementById(
+        "imageQuality",
+      );
+      const generateImageBtn = document.getElementById("generateImage");
+      const imagePreview = document.getElementById("imagePreview");
+      const imageCostIndicator = document.getElementById(
+        "imageCostIndicator",
+      );
+
       // Event listeners
       useAuthCheckbox.addEventListener("change", function () {
         tokenGroup.style.display = this.checked ? "block" : "none";
       });
 
       makeRequestBtn.addEventListener("click", makeApiRequest);
+      generateImageBtn.addEventListener("click", generateImage);
+      imageSizeSelect.addEventListener(
+        "change",
+        updateImageCostIndicator,
+      );
 
       // Update rate limit display
       function updateRateLimit() {
@@ -534,8 +712,195 @@
           `Network Error: ${error.message}\n\nMake sure the User Agent 402 server is running on the specified endpoint.\n\nTo start the server:\ndeno task dev`;
       }
 
+      // Update image cost indicator
+      function updateImageCostIndicator() {
+        const size = imageSizeSelect.value;
+        const cost = imagePricing[size];
+        const quality = imageQualitySelect.value;
+        const qualityText = quality === "hd" ? " (HD)" : "";
+        imageCostIndicator.textContent =
+          `💰 Cost: ${cost} credits for ${size}${qualityText} images`;
+      }
+
+      // Generate image function
+      async function generateImage() {
+        const prompt = imagePromptInput.value.trim();
+
+        if (!prompt) {
+          alert("Please enter an image prompt");
+          return;
+        }
+
+        generateImageBtn.disabled = true;
+        generateImageBtn.textContent = "🎨 Generating...";
+
+        // Show generating state
+        imagePreview.innerHTML =
+          '<div class="generating">Generating your image</div>';
+
+        try {
+          // Check free limit for anonymous users
+          if (!useAuthCheckbox.checked) {
+            imageGenerationCount++;
+            if (imageGenerationCount > maxFreeImages) {
+              showImagePaymentRequired();
+              return;
+            }
+          }
+
+          // Prepare request
+          const headers = {
+            "Content-Type": "application/json",
+          };
+
+          if (
+            useAuthCheckbox.checked && bearerTokenInput.value.trim()
+          ) {
+            headers["Authorization"] =
+              `Bearer ${bearerTokenInput.value.trim()}`;
+          }
+
+          const requestBody = {
+            prompt: prompt,
+            size: imageSizeSelect.value,
+            quality: imageQualitySelect.value,
+          };
+
+          // Make image generation request
+          const response = await fetch(
+            "http://localhost:8000/api/generate-image",
+            {
+              method: "POST",
+              headers: headers,
+              body: JSON.stringify(requestBody),
+            },
+          );
+
+          const result = await response.json();
+
+          if (response.ok && result.success) {
+            // Show generated image
+            imagePreview.innerHTML = `
+              <img src="${result.image.url}" alt="Generated image" />
+              <p style="margin-top: 10px; font-size: 12px; color: #6b7280;">
+                ${result.image.revised_prompt || prompt}
+              </p>
+              ${
+              result.cost
+                ? `<p style="font-size: 12px; color: #92400e;">Cost: ${result.cost} credits</p>`
+                : ""
+            }
+              ${
+              result.remaining_balance !== null
+                ? `<p style="font-size: 12px; color: #059669;">Remaining balance: ${result.remaining_balance}</p>`
+                : ""
+            }
+              ${
+              result.free_generations_remaining !== null
+                ? `<p style="font-size: 12px; color: #3b82f6;">Free generations remaining: ${result.free_generations_remaining}</p>`
+                : ""
+            }
+            `;
+
+            // Update status indicator
+            statusIndicator.innerHTML = `
+              <div class="status-success">
+                ✅ Image Generated Successfully - ${result.image.size} ${result.image.quality}
+              </div>
+            `;
+
+            // Show response in the response area
+            responseContent.textContent = JSON.stringify(
+              result,
+              null,
+              2,
+            );
+          } else if (response.status === 402) {
+            // Payment required
+            showImagePaymentRequired(result);
+          } else {
+            // Other errors
+            imagePreview.innerHTML = `
+              <div class="placeholder" style="color: #ef4444;">
+                ❌ Error: ${
+              result.message || "Failed to generate image"
+            }
+              </div>
+            `;
+
+            statusIndicator.innerHTML = `
+              <div class="status-error">
+                ❌ Image Generation Failed (${response.status})
+              </div>
+            `;
+
+            responseContent.textContent = JSON.stringify(
+              result,
+              null,
+              2,
+            );
+          }
+        } catch (error) {
+          imagePreview.innerHTML = `
+            <div class="placeholder" style="color: #ef4444;">
+              ❌ Network Error: ${error.message}
+            </div>
+          `;
+
+          statusIndicator.innerHTML = `
+            <div class="status-error">
+              🌐 Network Error - Check if the server is running
+            </div>
+          `;
+
+          responseContent.textContent =
+            `Network Error: ${error.message}\n\nMake sure the demo server is running with OpenAI API key configured.`;
+        } finally {
+          generateImageBtn.disabled = false;
+          generateImageBtn.textContent = "🎨 Generate Image";
+        }
+      }
+
+      // Show payment required for image generation
+      function showImagePaymentRequired(errorData = null) {
+        const defaultError = {
+          error: "Payment Required",
+          message:
+            `Free limit of ${maxFreeImages} images exceeded. Please authenticate to continue.`,
+          payment_link: "https://polar.sh/checkout/demo",
+          status: 402,
+        };
+
+        const error = errorData || defaultError;
+
+        imagePreview.innerHTML = `
+          <div class="placeholder" style="color: #d97706;">
+            💳 ${error.message}
+            ${
+          error.payment_link
+            ? `<br><a href="${error.payment_link}" class="payment-link" target="_blank" style="margin-top: 10px; display: inline-block;">Upgrade with Polar</a>`
+            : ""
+        }
+          </div>
+        `;
+
+        statusIndicator.innerHTML = `
+          <div class="status-payment">
+            💳 Payment Required (402) - Image generation limit exceeded
+            ${
+          error.payment_link
+            ? `<a href="${error.payment_link}" class="payment-link" target="_blank">Upgrade with Polar</a>`
+            : ""
+        }
+          </div>
+        `;
+
+        responseContent.textContent = JSON.stringify(error, null, 2);
+      }
+
       // Initialize demo
       updateRateLimit();
+      updateImageCostIndicator();
     </script>
   </body>
 </html>

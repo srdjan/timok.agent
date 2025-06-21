@@ -79,9 +79,10 @@ const isErr = <T, E>(result: Result<T, E>): result is Extract<Result<T, E>, { ki
 // === PURE FUNCTIONS ===
 
 // Parse request data immutably
-const parseRequestData = (request: Request): RequestData => {
+const parseRequestData = (request: Request): RequestData & { isHtmxRequest: boolean } => {
   const url = new URL(request.url);
   const authHeader = request.headers.get('Authorization');
+  const isHtmxRequest = request.headers.get('HX-Request') === 'true';
 
   return {
     url,
@@ -89,6 +90,7 @@ const parseRequestData = (request: Request): RequestData => {
     searchParams: url.searchParams,
     authToken: authHeader?.replace('Bearer ', '') || undefined,
     acceptHeader: request.headers.get('accept') || '',
+    isHtmxRequest,
   };
 };
 
@@ -308,7 +310,7 @@ const createPaymentRequiredResponse = (env: Record<string, string>) =>
   };
 
 // Create success response with format handling
-const createSuccessResponse = (responseText: string, format: ResponseFormat, cacheStatus: 'HIT' | 'MISS'): Response => {
+const createSuccessResponse = (responseText: string, format: ResponseFormat, cacheStatus: 'HIT' | 'MISS', isHtmxRequest = false): Response => {
   const contentType = match(format)
     .with('html', () => 'text/html')
     .with('markdown', () => 'text/markdown')
@@ -319,13 +321,21 @@ const createSuccessResponse = (responseText: string, format: ResponseFormat, cac
     .with('html', () => markdownToHtml(responseText))
     .otherwise(() => responseText);
 
+  const headers: Record<string, string> = {
+    'Content-Type': contentType,
+    'X-Cache': cacheStatus,
+    ...createCorsHeaders(),
+  };
+
+  // Add HTMX-specific headers for partial responses
+  if (isHtmxRequest) {
+    headers['HX-Trigger'] = 'contentUpdated';
+    headers['Vary'] = 'HX-Request';
+  }
+
   return new Response(formattedText, {
     status: 200,
-    headers: {
-      'Content-Type': contentType,
-      'X-Cache': cacheStatus,
-      ...createCorsHeaders(),
-    }
+    headers
   });
 };
 

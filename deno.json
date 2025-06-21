@@ -2,9 +2,13 @@
   "tasks": {
     "dev": "deno run --allow-net --allow-read --allow-write --allow-env --unstable-kv main.ts",
     "start": "deno run --allow-net --allow-read --allow-write --allow-env --unstable-kv main.ts",
-    "demo": "deno run --allow-all --unstable-kv demo_server.ts",
-    "test-demo": "deno run --allow-net test_demo.ts",
-    "verify": "deno run --allow-all verify_migration.ts"
+    "demo": "deno run --allow-all --unstable-kv examples/demo_server.ts",
+    "test": "deno run --allow-all --unstable-kv run_tests.ts",
+    "test-unit": "deno test --allow-all --unstable-kv tests/test_unit.ts",
+    "test-demo": "deno run --allow-net --allow-env --unstable-kv tests/test_demo.ts",
+    "test-quick": "deno run --allow-all --unstable-kv quick_test.ts",
+    "verify": "deno run --allow-all --unstable-kv verify_migration.ts",
+    "check": "deno check main.ts examples/demo_server.ts tests/test_unit.ts tests/test_demo.ts"
   },
   "imports": {
     "@std/assert": "jsr:@std/assert@1",
@@ -12,6 +16,7 @@
     "@std/path": "jsr:@std/path@1",
     "@std/toml": "jsr:@std/toml@1",
     "@polar-sh/sdk": "npm:@polar-sh/sdk@^0.34.0",
-    "ts-pattern": "https://esm.sh/ts-pattern@5"
+    "ts-pattern": "https://esm.sh/ts-pattern@5",
+    "openai": "npm:openai@^4.73.1"
   }
 }

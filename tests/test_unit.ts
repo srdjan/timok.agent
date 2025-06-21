@@ -170,29 +170,29 @@ Deno.test("Result type - err creation and checking", () => {
 class MockKV {
   private data = new Map<string, { value: unknown; expireTime?: number }>();
 
-  async get<T>(key: Deno.KvKey): Promise<Deno.KvEntryMaybe<T>> {
+  get<T>(key: Deno.KvKey): Promise<Deno.KvEntryMaybe<T>> {
     const keyStr = JSON.stringify(key);
     const entry = this.data.get(keyStr);
 
     if (!entry) {
-      return { key, value: null, versionstamp: null };
+      return Promise.resolve({ key, value: null, versionstamp: null });
     }
 
     if (entry.expireTime && Date.now() > entry.expireTime) {
       this.data.delete(keyStr);
-      return { key, value: null, versionstamp: null };
+      return Promise.resolve({ key, value: null, versionstamp: null });
     }
 
-    return { key, value: entry.value as T, versionstamp: "mockstamp" };
+    return Promise.resolve({ key, value: entry.value as T, versionstamp: "mockstamp" });
   }
 
-  async set(key: Deno.KvKey, value: unknown, options?: { expireIn?: number }): Promise<Deno.KvCommitResult> {
+  set(key: Deno.KvKey, value: unknown, options?: { expireIn?: number }): Promise<Deno.KvCommitResult> {
     const keyStr = JSON.stringify(key);
     const expireTime = options?.expireIn ? Date.now() + options.expireIn : undefined;
 
     this.data.set(keyStr, { value, expireTime });
 
-    return { ok: true, versionstamp: "mockstamp" };
+    return Promise.resolve({ ok: true, versionstamp: "mockstamp" });
   }
 }
 
