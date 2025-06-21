@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Agent 402 Demo - Polar Payment Integration</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family:
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          Roboto,
+          sans-serif;
+        line-height: 1.6;
+        color: #333;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 20px;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+      }
+
+      .header {
+        background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+        color: white;
+        padding: 30px;
+        text-align: center;
+      }
+
+      .header h1 {
+        font-size: 2.5rem;
+        margin-bottom: 10px;
+        font-weight: 700;
+      }
+
+      .header p {
+        font-size: 1.1rem;
+        opacity: 0.9;
+      }
+
+      .main-content {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0;
+        min-height: 600px;
+      }
+
+      .controls {
+        padding: 30px;
+        background: #f8fafc;
+        border-right: 1px solid #e2e8f0;
+      }
+
+      .response-area {
+        padding: 30px;
+        background: white;
+      }
+
+      .form-group {
+        margin-bottom: 20px;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: #374151;
+      }
+
+      input, select, textarea {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #e5e7eb;
+        border-radius: 8px;
+        font-size: 14px;
+        transition: border-color 0.2s;
+      }
+
+      input:focus, select:focus, textarea:focus {
+        outline: none;
+        border-color: #4f46e5;
+      }
+
+      .checkbox-group {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .checkbox-group input[type="checkbox"] {
+        width: auto;
+      }
+
+      .btn {
+        background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: transform 0.2s, box-shadow 0.2s;
+        width: 100%;
+      }
+
+      .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(79, 70, 229, 0.3);
+      }
+
+      .btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+      }
+
+      .status-indicator {
+        padding: 12px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        font-weight: 600;
+        text-align: center;
+      }
+
+      .status-success {
+        background: #dcfce7;
+        color: #166534;
+        border: 1px solid #bbf7d0;
+      }
+
+      .status-error {
+        background: #fef2f2;
+        color: #dc2626;
+        border: 1px solid #fecaca;
+      }
+
+      .status-payment {
+        background: #fef3c7;
+        color: #d97706;
+        border: 1px solid #fed7aa;
+      }
+
+      .response-content {
+        background: #1f2937;
+        color: #f9fafb;
+        padding: 20px;
+        border-radius: 8px;
+        font-family: "Monaco", "Menlo", monospace;
+        font-size: 14px;
+        line-height: 1.5;
+        overflow-x: auto;
+        white-space: pre-wrap;
+        max-height: 400px;
+        overflow-y: auto;
+      }
+
+      .rate-limit-info {
+        background: #eff6ff;
+        border: 1px solid #bfdbfe;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 20px;
+      }
+
+      .rate-limit-info h3 {
+        color: #1e40af;
+        margin-bottom: 10px;
+      }
+
+      .rate-limit-bar {
+        background: #e5e7eb;
+        height: 8px;
+        border-radius: 4px;
+        overflow: hidden;
+        margin-top: 8px;
+      }
+
+      .rate-limit-fill {
+        background: linear-gradient(90deg, #10b981 0%, #059669 100%);
+        height: 100%;
+        transition: width 0.3s ease;
+      }
+
+      @media (max-width: 768px) {
+        .main-content {
+          grid-template-columns: 1fr;
+        }
+
+        .controls {
+          border-right: none;
+          border-bottom: 1px solid #e2e8f0;
+        }
+
+        .header h1 {
+          font-size: 2rem;
+        }
+      }
+
+      .payment-link {
+        display: inline-block;
+        background: #f59e0b;
+        color: white;
+        padding: 8px 16px;
+        border-radius: 6px;
+        text-decoration: none;
+        font-weight: 600;
+        margin-top: 10px;
+        transition: background 0.2s;
+      }
+
+      .payment-link:hover {
+        background: #d97706;
+      }
+
+      .info-box {
+        background: #f0f9ff;
+        border: 1px solid #0ea5e9;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 20px;
+      }
+
+      .info-box h3 {
+        color: #0369a1;
+        margin-bottom: 8px;
+      }
+
+      .info-box p {
+        color: #0c4a6e;
+        font-size: 14px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>🚀 User Agent 402 Demo</h1>
+        <p>
+          Monetized API with Polar Payment Integration - Test rate limiting,
+          authentication, and payment flows
+        </p>
+      </div>
+
+      <div class="main-content">
+        <div class="controls">
+          <div class="info-box">
+            <h3>💡 How it works</h3>
+            <p>
+              This demo shows how User Agent 402 handles free tier rate limiting
+              and payment-required responses using Polar for billing.
+            </p>
+          </div>
+
+          <div class="rate-limit-info">
+            <h3>📊 Rate Limit Status</h3>
+            <p>
+              Free tier: <span id="requestCount">0</span>/10 requests per hour
+            </p>
+            <div class="rate-limit-bar">
+              <div class="rate-limit-fill" id="rateLimitFill" style="width: 0%">
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="endpoint">API Endpoint</label>
+            <select id="endpoint">
+              <option value="http://localhost:8000/">Root (Welcome)</option>
+              <option value="http://localhost:8000/api/status">
+                API Status
+              </option>
+              <option value="http://localhost:8000/api/user">User Info</option>
+              <option value="http://localhost:8000/api/data">
+                Sample Data
+              </option>
+              <option value="http://localhost:8000/api/premium">
+                Premium Content
+              </option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="customEndpoint">Custom Endpoint (Optional)</label>
+            <input
+              type="text"
+              id="customEndpoint"
+              placeholder="Enter custom endpoint URL"
+            >
+          </div>
+
+          <div class="form-group">
+            <label for="responseFormat">Response Format</label>
+            <select id="responseFormat">
+              <option value="json">JSON</option>
+              <option value="html">HTML</option>
+              <option value="markdown">Markdown</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <div class="checkbox-group">
+              <input type="checkbox" id="useAuth">
+              <label for="useAuth">Use Authentication (Bearer Token)</label>
+            </div>
+          </div>
+
+          <div class="form-group" id="tokenGroup" style="display: none">
+            <label for="bearerToken">Bearer Token</label>
+            <input
+              type="text"
+              id="bearerToken"
+              placeholder="Enter your access token"
+            >
+          </div>
+
+          <button class="btn" id="makeRequest">Make API Request</button>
+        </div>
+
+        <div class="response-area">
+          <h3>📡 API Response</h3>
+          <div id="statusIndicator"></div>
+          <div class="response-content" id="responseContent">
+            Click "Make API Request" to see the response here... This demo will
+            show: • ✅ Successful responses (200) • ⚠️ Rate limit exceeded (402)
+            • 🔒 Authentication required • 💳 Payment required responses • 📄
+            Different format outputs
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Demo state management
+      let requestCount = 0;
+      const maxFreeRequests = 10;
+
+      // DOM elements
+      const endpointSelect = document.getElementById("endpoint");
+      const customEndpointInput = document.getElementById(
+        "customEndpoint",
+      );
+      const responseFormatSelect = document.getElementById(
+        "responseFormat",
+      );
+      const useAuthCheckbox = document.getElementById("useAuth");
+      const bearerTokenInput = document.getElementById("bearerToken");
+      const tokenGroup = document.getElementById("tokenGroup");
+      const makeRequestBtn = document.getElementById("makeRequest");
+      const statusIndicator = document.getElementById(
+        "statusIndicator",
+      );
+      const responseContent = document.getElementById(
+        "responseContent",
+      );
+      const requestCountSpan = document.getElementById("requestCount");
+      const rateLimitFill = document.getElementById("rateLimitFill");
+
+      // Event listeners
+      useAuthCheckbox.addEventListener("change", function () {
+        tokenGroup.style.display = this.checked ? "block" : "none";
+      });
+
+      makeRequestBtn.addEventListener("click", makeApiRequest);
+
+      // Update rate limit display
+      function updateRateLimit() {
+        requestCountSpan.textContent = requestCount;
+        const percentage = (requestCount / maxFreeRequests) * 100;
+        rateLimitFill.style.width = percentage + "%";
+
+        if (percentage >= 100) {
+          rateLimitFill.style.background =
+            "linear-gradient(90deg, #ef4444 0%, #dc2626 100%)";
+        }
+      }
+
+      // Make API request function
+      async function makeApiRequest() {
+        makeRequestBtn.disabled = true;
+        makeRequestBtn.textContent = "Making Request...";
+
+        try {
+          // Prepare request headers
+          const headers = {
+            "Content-Type": "application/json",
+          };
+
+          // Add Accept header based on format
+          const format = responseFormatSelect.value;
+          if (format === "html") {
+            headers["Accept"] = "text/html";
+          } else if (format === "markdown") {
+            headers["Accept"] = "text/markdown";
+          } else {
+            headers["Accept"] = "application/json";
+          }
+
+          // Add authentication if enabled
+          if (
+            useAuthCheckbox.checked && bearerTokenInput.value.trim()
+          ) {
+            headers["Authorization"] =
+              `Bearer ${bearerTokenInput.value.trim()}`;
+          }
+
+          // Simulate rate limiting for demo purposes
+          if (!useAuthCheckbox.checked) {
+            requestCount++;
+            updateRateLimit();
+
+            if (requestCount > maxFreeRequests) {
+              // Simulate 402 Payment Required response
+              showPaymentRequired();
+              return;
+            }
+          }
+
+          // Determine which endpoint to use
+          const endpoint = customEndpointInput.value.trim() ||
+            endpointSelect.value;
+
+          // Make the actual request
+          const response = await fetch(endpoint, {
+            method: "GET",
+            headers: headers,
+          });
+
+          // Handle different response types
+          if (response.status === 402) {
+            const errorData = await response.json();
+            showPaymentRequired(errorData);
+          } else if (response.ok) {
+            const responseText = await response.text();
+            showSuccessResponse(response, responseText);
+          } else {
+            showErrorResponse(response);
+          }
+        } catch (error) {
+          showNetworkError(error);
+        } finally {
+          makeRequestBtn.disabled = false;
+          makeRequestBtn.textContent = "Make API Request";
+        }
+      }
+
+      // Display functions
+      function showSuccessResponse(response, responseText) {
+        statusIndicator.innerHTML = `
+                <div class="status-success">
+                    ✅ Success (${response.status}) - Cache: ${
+          response.headers.get("X-Cache") || "N/A"
+        }
+                </div>
+            `;
+
+        // Format response based on content type
+        const contentType = response.headers.get("Content-Type") || "";
+        if (contentType.includes("application/json")) {
+          try {
+            const jsonData = JSON.parse(responseText);
+            responseContent.textContent = JSON.stringify(
+              jsonData,
+              null,
+              2,
+            );
+          } catch {
+            responseContent.textContent = responseText;
+          }
+        } else {
+          responseContent.textContent = responseText;
+        }
+      }
+
+      function showPaymentRequired(errorData = null) {
+        const defaultError = {
+          error: "Payment Required",
+          message:
+            "Free rate limit exceeded. Limit: 10 requests per 3600 seconds.",
+          payment_link: "https://polar.sh/checkout/demo",
+          status: 402,
+        };
+
+        const error = errorData || defaultError;
+
+        statusIndicator.innerHTML = `
+                <div class="status-payment">
+                    💳 Payment Required (402) - Rate limit exceeded
+                    ${
+          error.payment_link
+            ? `<a href="${error.payment_link}" class="payment-link" target="_blank">Upgrade with Polar</a>`
+            : ""
+        }
+                </div>
+            `;
+
+        responseContent.textContent = JSON.stringify(error, null, 2);
+      }
+
+      function showErrorResponse(response) {
+        statusIndicator.innerHTML = `
+                <div class="status-error">
+                    ❌ Error (${response.status}) - ${response.statusText}
+                </div>
+            `;
+
+        responseContent.textContent =
+          `HTTP ${response.status}: ${response.statusText}`;
+      }
+
+      function showNetworkError(error) {
+        statusIndicator.innerHTML = `
+                <div class="status-error">
+                    🌐 Network Error - Check if the server is running
+                </div>
+            `;
+
+        responseContent.textContent =
+          `Network Error: ${error.message}\n\nMake sure the User Agent 402 server is running on the specified endpoint.\n\nTo start the server:\ndeno task dev`;
+      }
+
+      // Initialize demo
+      updateRateLimit();
+    </script>
+  </body>
+</html>

@@ -1,7 +1,10 @@
 {
   "tasks": {
     "dev": "deno run --allow-net --allow-read --allow-write --allow-env --unstable-kv main.ts",
-    "start": "deno run --allow-net --allow-read --allow-write --allow-env --unstable-kv main.ts"
+    "start": "deno run --allow-net --allow-read --allow-write --allow-env --unstable-kv main.ts",
+    "demo": "deno run --allow-all --unstable-kv demo_server.ts",
+    "test-demo": "deno run --allow-net test_demo.ts",
+    "verify": "deno run --allow-all verify_migration.ts"
   },
   "imports": {
     "@std/assert": "jsr:@std/assert@1",
